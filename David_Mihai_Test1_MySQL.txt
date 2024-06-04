@@ -1,0 +1,87 @@
+1) Creati un tabel A1 cu campuri
+a1 --> sir de caractere de lungime maxim 10, camp obligatoriu, primary key
+a2 --> date temporale (an/luna/zi), camp obligatoriu
+a3 ---> sir de caractere de lungime variabila, maxim 10 caractere
+a4 ---> integer, valoare default 4
+a5 --> numar real, camp obligatoriu
+
+CREATE TABLE A1 (
+    a1 CHAR(10) NOT NULL PRIMARY KEY,
+    a2 Date NOT NULL,
+    a3 VARCHAR(10),
+    a4 INT DEFAULT '4', 
+    a5 FLOAT NOT NULL
+);
+
+Creati un tabel A2 cu campuri
+b1 --> integer, cheie primara
+b2 --> integer, camp obligatoriu
+a1 --> sir de caractere de lungime maxim 10, cheie externa legata de cheia primara a1 din tabelul A1
+
+CREATE TABLE A2 (
+    b1 INT PRIMARY KEY,
+    b2 INT NOT NULL,
+    a1 CHAR(10),
+    FOREIGN KEY (a1)
+     REFERENCES A1 (a1)
+);
+
+Dupa ce ati creat tabelele executati succesiv instructiunile
+insert into A1(a1,a2,a3,a5) values ('123',2000-11-21,'aaa', 3.2);
+insert into A2(b1,b2,a1) values (1,1,'123');
+
+explicati de ce ambele interogari vor genera erori.
+
+Pentru prima interogare, eroarea este cauzata de faptul ca data calendaristica nu este pusa intre ghilimele.
+Pentru a doua interogare, eroarea este cauzata de faptul ca valorea lui a1 nu exista in tabelul A1; a1 fiind cheie externa legata de cheia primara din A1, toate valorile pe care le ia in tabelul A2 trebuie sa existe mai intai in A1.
+
+2)  Scrieti un CONSTRAINT (constrangere) de tip CHECK pentru ca intr-un tabel dat un camp c2 de tip char(10) sa satisfaca: c2 sa inceapa cu a si sa contina b.
+
+constraint ex2 CHECK (c2 like 'a%b%');
+ 
+3)Scrieti un trigger care sa reactioneze BEFORE INSERT intr-un tabel dat T ce contine un camp c2 de tip char(10) si care sa permita inserarea de valori in tabel numai daca: primul sau al doilea caracter al lui c2 este 'a'.
+
+DELIMITER //
+CREATE TRIGGER ex3 BEFORE INSERT ON T
+ FOR EACH ROW
+ BEGIN
+	IF(c2 not like 'a%' or c2 not like '_a%')
+	THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Cuvantul trebui sa aiba prima sau a doua litera a mare sau mic';
+	END IF;
+
+ END;
+//
+DELIMITER;
+
+Inlocuiti mai jos ?????????  cu sintaxa potrivita pentru ca instructiunea sa returneze valoarea 1
+
+select str regexp ?????????;
+
+numai atunci cand str e un sir de caractere asa ca
+
+
+4)sa contina litera a la inceput sau litera b la sfarsit.
+
+select str regexp '(^a|b$)';
+
+5)sa contina numai cifre sau cel mult o cratima, iar aceasta, daca apare, trebuie sa nu fie in capete.
+
+select str regexp '^[0-9]{1,}[\\-]{0,1}[0-9]{1,}$';
+
+6) sa contina exact 4 caractere din care prima este litera a iar celelalte sunt cifre.
+
+select str regexp '^a[0-9]{3}$';
+
+7) sa contina numai cifre sau sa contina numai litere.
+
+select str regexp '([0-9]|[a,z])+';
+
+8) sa nu contina cifre.
+
+select str regexp '^[!0-9]$';
+
+9) sa contina litera a  exact o data.
+
+select str regexp 'a{1}';

@@ -1,0 +1,133 @@
+Laborator 3
+
+Interogari CREATE in mysql
+ 
+1) Creati o baza goala numita  lib3_numele_dvs.
+
+create database lib3_david_mihai;
+
+2) Dupa creare, afisati toate bazele de date de pe platforma.
+
+show databases;
+
+3) Stergeti aceasta baza, apoi creati-o iar.
+
+drop database lib3_david_mihai;
+create database lib3_david_mihai;
+
+3) Executati comanda potrivita pentru a putea utiliza baza creata.
+
+use lib3_david_mihai;
+
+4) Creati tabelele clienti, comenzi, carti_comandate, carti cu campurile:
+
+clienti -----> cnp, nume, tel, oras, data_inreg
+
+drop table if exists clienti;
+CREATE TABLE clienti (
+  cnp char(13) NOT NULL PRIMARY KEY,
+  nume VARCHAR(20) NOT NULL,
+  tel char(11),
+  oras VARCHAR(20),
+  data_inreg Date
+) ;
+
+comenzi -----> id_comanda, cnp, valoarea (totala a comenzii), data(cand a fost efectuata comanda)
+
+CREATE TABLE comenzi (
+  id_comanda int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  cnp char(13) NOT NULL, 
+  valoare double NOT NULL,
+  data Date NOT NULL, 
+ FOREIGN KEY (cnp)    
+    REFERENCES clienti (cnp)  
+    ON UPDATE CASCADE  ON DELETE CASCADE    
+);
+
+carti_comandate ---> id_comanda, id_carte, cantitate
+
+CREATE TABLE carti_comandate (
+  id_comanda int unsigned NOT NULL,
+  id_carte char(10) NOT NULL,
+  cantitate int unsigned NOT NULL,
+ FOREIGN KEY (id_comanda)    
+    REFERENCES comenzi (id_comanda)  
+    ON UPDATE CASCADE  ON DELETE CASCADE,
+ FOREIGN KEY (id_carte)    
+    REFERENCES carti (id_carte)  
+    ON UPDATE CASCADE  ON DELETE CASCADE
+) ;
+
+carti--->id_carte, titlu, autor, pret pe bucata
+
+CREATE TABLE carti (
+  id_carte char(10) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL,
+  autor VARCHAR(20) NOT NULL,
+  pret int unsigned NOT NULL
+) ;
+
+
+Stabiliti corect in cadrul interogarii de creare a tabelelor tipurile de variabile, cheile primare si cheile externe. 
+De asemenea stabiliti valorile care vor fi introduse obligatoriu (not null) si acelea unde exista o valoare default. 
+Creati tabelele pentru ca sa inlocuiasca alte tabele cu acelasi nume daca ele exista. 
+
+Verificati ca tabelele sunt legate de asa natura incat:
+
+a) daca introducem in comenzi o comanda cu un cnp care nu e din tabelul clienti  vom obtine mesaj de eroare din partea platformei.
+b) daca stergem un client atunci toate comenzile lui sunt sterse din tabelul comenzi
+c) daca modificam  cnp-ul unui client atunci cnp-ul lui se modfica automat in tabelul comenzi.  
+
+pentru inserare date in tabele folositi insert, vezi notitele de curs, partea de la final.
+
+
+folositi comanda de stergere
+delete from clienti where nume='Ion';
+
+comanda de update
+update clienti set cnp='123' where nume="Maria';
+
+comanda de afisare
+select * from clienti
+
+afisare comanda de creare tabel:
+show create table clienti;
+
+
+Vom reveni la interogarile delete si update in cursurile urmatoare.
+
+
+
+5) Creati un tabel carti1 prin clonarea tabelul carti folosind o interogare CREATE.
+
+create table clienti1 like clienti;
+
+6) Introduceti 2 clienti, 2 carti 2 comenzi si cartile vandute aferente folosind interogari de tip INSERT.
+
+insert into clienti(cnp, nume, data_inreg) values
+(1234,'Geta','2012-10-23'),
+(1235,'Ion','2010-10-23'),
+(1237,'Ana','2002-07-14');
+
+insert into carti(id_carte,titlu,autor,pret) values
+(111,'Info','Matei',5),
+(222,'Mate','Mara',2),
+(333,'TIC','Thomas',8);
+
+insert into comenzi(cnp,valoare,data) values
+(1234,13,'2023-10-23'),
+(1235,4,'2023-09-12'),
+(1237,15,'2022-12-12');
+
+insert into carti_comandate(id_comanda,id_carte,cantitate) values
+(2,333,1),
+(2,111,1),
+(3,222,2),
+(4,111,1),
+(4,222,1),
+(4,333,1);
+
+7) Copiati continutul tabelului carti in tabelul carti1 folosind interogari INSERT si SELECT. 
+
+INSERT INTO clienti1 SELECT * FROM clienti;
+

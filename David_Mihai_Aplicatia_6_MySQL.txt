@@ -1,0 +1,601 @@
+Laborator 6
+
+=================================================
+OPERATORUL REGEXP
+
+Fie tabelul 
+CREATE TABLE clienti10(
+  cnp char(13) NOT NULL PRIMARY KEY,
+  nume VARCHAR(20) NOT NULL, 
+  oras VARCHAR(20) NOT NULL,  
+  tel  CHAR(10), 
+  email varchar(20),
+  data_inreg DATE DEFAULT '2019-10-23'
+) ;
+
+Scrieti triggeri asociati acestui tabel pentru a permite  
+folosind REGEXP introducerea datelor cu INSERT precum e specificat mai jos. 
+Triggerii pot fi numiti ex1, ex2, etc. (VA ATENTIONEZ INCA O DATA CA PENTRU FILTRAREA CORECTA A DATELOR TREBUIE SA SCRIEM 2 TRIGGERI, UNUL PENTRU 'BEFORE INSERT', UNUL PENTRU 'BEFORE UPDATE' dar aici va cer unul singur, pt BEFORE INSERT)
+
+Pentru verificare puteti mai intai folosi SELECT ca la curs. spre exemplu
+pot testa selectia sirurilor de caractere din exact 4 caractere, toate cifre:
+
+select '1234' regexp '^[0-9]{4}$';
+select '123a' regexp '^[0-9]{4}$';
+select '12345' regexp '^[0-9]{4}$';
+
+dupa care scriu tiggerul
+
+drop trigger if exists ex0;
+DELIMITER //
+CREATE  TRIGGER ex0 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[0-9]{4}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'scrieti mesaj aici';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+
+DUPA FIECARE EXERCITIU STERGETI TRIGGERUL CREAT.
+
+
+1) nume formate numai din litere
+
+drop trigger if exists ex1;
+DELIMITER //
+CREATE  TRIGGER ex1 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[a-z]{1,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa fie doar din litere';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+insert into clienti10(cnp,nume,oras) values (111,'AdRiAn','Bucuresti');		- Okay
+insert into clienti10(cnp,nume,oras) values (222,'4dr1an','Cluj');		- Eroare
+
+select 'ADRIAN' regexp '^[a-z]{1,}$';		- Okay
+select 'Adrian' regexp '^[a-z]{1,}$';		- Okay
+select 'ADR1AN' regexp '^[a-z]{1,}$';		- Eroare
+
+2) cnp formate numai din cifre
+
+drop trigger if exists ex2;
+DELIMITER //
+CREATE  TRIGGER ex2 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.cnp not regexp '^[0-9]{1,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie doar din cifre';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+insert into clienti10(cnp,nume,oras) values ('333','Matei','Constanta');	- Okay
+insert into clienti10(cnp,nume,oras) values ('44e4','Ana','Tulcea');		- Eroare
+
+select '1234' regexp '^[0-9]{1,}$';		- Okay
+select '12E4' regexp '^[0-9]{1,}$';		- Eroare
+
+3) cnp formate din exact 13 cifre
+
+drop trigger if exists ex3;
+DELIMITER //
+CREATE  TRIGGER ex3 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.cnp not regexp '^[0-9]{13}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie doar din cifre';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select '1231231231231' regexp '^[0-9]{13}$';		- Okay
+select '1234' regexp '^[0-9]{13}$';			- Eroare
+
+4) nume care incep cu A (mare sau mic) si contin numai litere.
+
+drop trigger if exists ex4;
+DELIMITER //
+CREATE  TRIGGER ex4 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^a[a-z]{1,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu a sau A si sa contina numai litere';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Adrian' regexp '^a[a-z]{1,}$';		- Okay
+select 'adrian' regexp '^a[a-z]{1,}$';		- Okay
+select 'gdrian' regexp '^a[a-z]{1,}$';		- Eroare
+
+5) Nume care incep cu A mare si contin numai litere.
+
+drop trigger if exists ex5;
+DELIMITER //
+CREATE  TRIGGER ex5 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp binary '^A[a-z]{1,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu A si sa contina numai litere';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Adrian' regexp binary '^A[a-z]{1,}$';	- Okay
+select 'adrian' regexp binary '^A[a-z]{1,}$';	- Eroare
+select 'Adria4' regexp binary '^A[a-z]{1,}$';	- Eroare
+
+6) CNP care incep cu 1,2,5 sau 6 si au exact 13 cifre.
+
+drop trigger if exists ex6;
+DELIMITER //
+CREATE  TRIGGER ex6 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.cnp not regexp '^[1256][0-9]{12}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'CNP-ul trebuie sa inceapa cu 1,2,5 sau 6 si da aiba exact 13 cifre';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select '1231231231231' regexp '^[1256][0-9]{12}$';		- Okay
+select '2231231231231' regexp '^[1256][0-9]{12}$';		- Okay
+select '5231231231231' regexp '^[1256][0-9]{12}$';		- Okay
+select '6231231231231' regexp '^[1256][0-9]{12}$';		- Okay
+select '1234' regexp '^[1256][0-9]{12}$';			- Eroare
+select '4123123123123' regexp '^[1256][0-9]{12}$';		- Eroare
+
+7) Nume care se termina in 'escu'.
+
+drop trigger if exists ex7;
+DELIMITER //
+CREATE  TRIGGER ex7 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp 'escu$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa se incheie cu escu';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andreescu' regexp 'escu$';	- Okay
+select 'Andrscu' regexp 'escu$';	- Eroare
+select 'Escuu' regexp 'escu$';		- Eroare
+
+8) Nume care contin secventa 'en'.
+
+drop trigger if exists ex8;
+DELIMITER //
+CREATE  TRIGGER ex8 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp 'en')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa contina secventa en';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Enescu' regexp 'en';	- Okay
+select 'Escuen' regexp 'en';	- Okay
+select 'Escene' regexp 'en';	- Okay
+select 'Andrei' regexp 'en';	- Eroare
+
+9) Nume care incep cu A sau C, mari sau mici.
+
+drop trigger if exists ex9;
+DELIMITER //
+CREATE  TRIGGER ex9 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^(a|c)')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu A sau C, mari sau mici';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp '^(a|c)';	- Okay
+select 'andrei' regexp '^(a|c)';	- Okay
+select 'Cosmin' regexp '^(a|c)';	- Okay
+select 'cosmin' regexp '^(a|c)';	- Okay
+select 'Matei' regexp '^(a|c)';		- Eroare
+
+9') Nume care incep cu A mare sau C mare.
+
+drop trigger if exists ex90;
+DELIMITER //
+CREATE  TRIGGER ex90 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp binary '^(A|C)')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu A sau C mari';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp binary '^(A|C)';		- Okay
+select 'andrei' regexp binary '^(A|C)';		- Eroare
+select 'Cosmin' regexp binary '^(A|C)';		- Okay
+select 'cosmin' regexp binary '^(A|C)';		- Eroare
+select 'Matei' regexp binary '^(A|C)';		- Eroare
+
+10) Nume care incep cu o litera din intervalul A-J, mare sau mica.
+
+drop trigger if exists ex10;
+DELIMITER //
+CREATE  TRIGGER ex10 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[A-J]')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu o litera dion intervalul A-J, mare sau mica';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp '^[A-J]';	- Okay
+select 'andrei' regexp '^[A-J]';	- Okay
+select 'Cosmin' regexp '^[A-J]';	- Okay
+select 'cosmin' regexp '^[A-J]';	- Okay
+select 'Zebra' regexp '^[A-J]';		- Eroare
+
+11) Nume care incep cu o litera mare din intervalul A-J.
+
+drop trigger if exists ex11;
+DELIMITER //
+CREATE  TRIGGER ex11 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp binary '^[A-J]')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu o litera mare din intervalul A-J';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp binary '^[A-J]';		- Okay
+select 'andrei' regexp binary '^[A-J]';		- Eroare
+select 'Cosmin' regexp binary '^[A-J]';		- Okay
+select 'cosmin' regexp binary '^[A-J]';		- Eroare
+select 'Zebra' regexp binary '^[A-J]';		- Eroare
+
+12) Nume care contin un numar de litere intre 5 si 9.
+
+drop trigger if exists ex12;
+DELIMITER //
+CREATE  TRIGGER ex12 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[a-z]{5,9}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa contina un numar de litere intre 5 si 9';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp '^[a-z]{5,9}$';			- Okay
+select 'Ana' regexp '^[a-z]{5,9}$';			- Eroare
+select '567Ana' regexp '^[a-z]{5,9}$';			- Eroare
+select 'AlexandruAndrei' regexp '^[a-z]{5,9}$';		- Eroare
+
+13) Nume care contin numai litere si de lungime  > 5.
+
+drop trigger if exists ex13;
+DELIMITER //
+CREATE  TRIGGER ex13 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[a-z]{5,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa contina numai litere si sa fie de lungime >5';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp '^[a-z]{5,}$';			- Okay
+select 'Ana' regexp '^[a-z]{5,}$';			- Eroare
+select '567Ana' regexp '^[a-z]{5,}$';			- Eroare
+select 'AlexandruAndrei' regexp '^[a-z]{5,}$';		- Okay
+
+14) telefon din 10 cifre.
+
+drop trigger if exists ex14;
+DELIMITER //
+CREATE  TRIGGER ex14 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.tel not regexp '^[0-9]{10}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Telefonul trebuie sa fie din 10 cifre';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select '1234567891' regexp '^[0-9]{10}$';		- Okay
+select '123' regexp '^[0-9]{10}$';			- Eroare
+select '123Ana1231' regexp '^[0-9]{10}$';		- Eroare
+
+15)  email care sa contina @
+
+drop trigger if exists ex15;
+DELIMITER //
+CREATE  TRIGGER ex15 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '@')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa contina @';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'my_user@myemail.com' regexp '\\@';		- Okay
+select '@my_user.myemail.com' regexp '\\@';		- Okay
+select 'my_user.myemail.com' regexp '\\@';		- Eroare
+
+16) email care sa contina @ si sa se termine in .com
+
+drop trigger if exists ex16;
+DELIMITER //
+CREATE  TRIGGER ex16 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa contina @ si sa se termin in .com';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'my_user@myemail.com' regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$';	- Okay
+select '@my_usermyemail.com' regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$';	- Okay
+select 'my_user@myemail' regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$';		- Eroare
+select '@my_usermyemail' regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$';		- Eroare
+select 'my_usermyemail.com' regexp '^[a-z0-9\\_\\-]{0,}\\@[a-z0-9\\_\\-]{0,}(\\.com)$';		- Eroare
+
+17) email care sa contina @, sa se termine in .com si in rest sa contina numai litere.
+
+drop trigger if exists ex17;
+DELIMITER //
+CREATE  TRIGGER ex17 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa contina @, sa se termin in .com si in rest sa contina numai litere';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'myuser@myemail.com' regexp '^[a-z]{0,}\\@[a-z]{0,}(\\.com)$';		- Okay
+select '@myusermyemail.com' regexp '^[a-z]{0,}\\@[a-z]{0,}(\\.com)$';		- Okay
+select 'myuser15@myemail.com' regexp '^[a-z]{0,}\\@[a-z]{0,}(\\.com)$';		- Eroare
+select 'myuser@myemail15.com' regexp '^[a-z]{0,}\\@[a-z]{0,}(\\.com)$';		- Eroare
+select 'my_user@myemail.com' regexp '^[a-z]{0,}\\@[a-z]{0,}(\\.com)$';		- Eroare
+
+18) email care sa contina @, sa se termine in .com si in rest sa contina numai litere sau cifre.
+
+drop trigger if exists ex18;
+DELIMITER //
+CREATE  TRIGGER ex18 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa contina @, sa se termin in .com si in rest sa contina numai litere sau cifre';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'myuser@myemail.com' regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$';		- Okay
+select '@myusermyemail.com' regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$';		- Okay
+select 'myuser15@myemail.com' regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$';		- Okay
+select 'myuser@myemail15.com' regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$';		- Okay
+select 'my_user@myemail.com' regexp '^[a-z0-9]{0,}\\@[a-z0-9]{0,}(\\.com)$';		- Eroare
+
+19) email de tipul  sir1@sir2.com, iar sir 1 si sir2 sa fie numai dn litere sau cifre sau  underscore _ (cel mult unul), iar acesta sa fie in interior, nu in capetele celor 2 siruri.
+spre ex
+my_user@myemail.com
+
+drop trigger if exists ex19;
+DELIMITER //
+CREATE  TRIGGER ex19 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '^[a-z0-9\\_]{0,}\\@[a-z0-9\\_]{0,}(\\.com)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa fie de tipul  sir1@sir2.com, iar sir 1 si sir2 sa fie numai dn litere sau cifre sau  underscore _ (cel mult unul), iar acesta sa fie in interior, nu in capetele celor 2 siruri';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'my_user@myemail.com' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{0,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';	- Okay
+select '_my_user@myemail.com' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{1,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';	- Eroare
+select 'my_user_@myemail.com' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{1,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';	- Eroare
+select '@my_usermyemail.com' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{0,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';	- Eroare
+select 'my_user@myemail' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{0,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';		- Eroare
+select '@my_usermyemail' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{0,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';		- Eroare
+select 'my_usermyemail.com' regexp '^[a-z0-9]{1,}[a-z0-9\\_]{0,}[a-z0-9]{1,}\\@[a-z0-9\\_]{0,}(\\.com)$';	- Eroare
+
+20) Nume din litere plus posibil un singur spatiu gol, posibil o singura cratima
+
+drop trigger if exists ex20;
+DELIMITER //
+CREATE  TRIGGER ex20 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[a-z]{1,}[ -]{0,1}[a-z]{1,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa fie din litere plus posibil un singur spatiu gol, posibil o singura cratima';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei-Ion' regexp '^[a-z]{1,}[ -]{0,1}[a-z]{1,}$';	- Okay
+select 'Ana Maria' regexp '^[a-z]{1,}[ -]{0,1}[a-z]{1,}$';	- Okay
+select 'Matei   Ion' regexp '^[a-z]{1,}[ -]{0,1}[a-z]{1,}$';	- Eroare
+select 'Ana' regexp '^[a-z]{1,}[ -]{0,1}[a-z]{1,}$';		- Okay
+
+21) Oras care e numai din litere plus posibil un sigur spatiu gol in interior si posibil o singura cratima in interior. prima litera este obligatoriu mare iar urmatoarele obligatoriu mici.
+
+drop trigger if exists ex21;
+DELIMITER //
+CREATE  TRIGGER ex21 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.oras not regexp '^[A-Z]{1}[a-z]{1,}[ -]{0,1}[A-Z]{0,1}[a-z]{0,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Orasul trebuie sa fie numai din litere plus posibil un sigur spatiu gol in interior si posibil o singura cratima in interior. prima litera este obligatoriu mare iar urmatoarele obligatoriu mici';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Cluj-Napoca' regexp binary '^[A-Z]{1}[a-z]{1,}[ -]{0,1}[A-Z]{0,1}[a-z]{0,}$';	- Okay
+select 'Cluj Napoca' regexp binary '^[A-Z]{1}[a-z]{1,}[ -]{0,1}[A-Z]{0,1}[a-z]{0,}$';	- Okay
+select 'Constanta' regexp binary '^[A-Z]{1}[a-z]{1,}[ -]{0,1}[A-Z]{0,1}[a-z]{0,}$';	- Okay
+select 'ConStaNta' regexp binary '^[A-Z]{1}[a-z]{1,}[ -]{0,1}[A-Z]{0,1}[a-z]{0,}$';	- Eroare
+
+22) nume care sa nu contina cifre (poate contine orice altceva). 
+
+drop trigger if exists ex22;
+DELIMITER //
+CREATE  TRIGGER ex22 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '^[^0-9]{0,}$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa nu contina cifre (poate contine orice altceva)';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andrei' regexp '^[^0-9]{0,}$';		- Okay
+select 'Andrei-_+' regexp '^[^0-9]{0,}$';	- Okay
+select 'Andrei13' regexp '^[^0-9]{0,}$';	- Eroare
+
+23) nume care sa se termine cu 'escu' sau sa se termine cu 'eanu'.
+
+drop trigger if exists ex23;
+DELIMITER //
+CREATE  TRIGGER ex23 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.nume not regexp '(escu|eanu)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Numele trebuie sa se termine cu escu sau sa se termine cu eanu';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'Andreescu' regexp '(escu|eanu)$';	- Okay
+select 'Andreeanu' regexp '(escu|eanu)$';	- Okay
+select 'Escuu' regexp '(escu|eanu)$';		- Eroare
+
+24) email care sa se termine cu '.ro' sau cu '.com' sau cu '.org' 
+
+drop trigger if exists ex24;
+DELIMITER //
+CREATE  TRIGGER ex24 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '(\\.ro|\\.com|\\.org)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa se termine cu .ro sau cu .com sau cu .org';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'my_email@user.ro' regexp '(\\.ro|\\.com|\\.org)$';	- Okay
+select 'my_email@user.com' regexp '(\\.ro|\\.com|\\.org)$';	- Okay
+select 'my_email@user.org' regexp '(\\.ro|\\.com|\\.org)$';	- Okay
+select 'my_email@user.ru' regexp '(\\.ro|\\.com|\\.org)$';	- Eroare
+
+25) email care sa nu contina spatiu gol si sa contina @.
+
+drop trigger if exists ex25;
+DELIMITER //
+CREATE  TRIGGER ex25 BEFORE  INSERT  ON clienti10
+ FOR EACH ROW
+ BEGIN
+    IF (NEW.email not regexp '(\\.ro|\\.com|\\.org)$')
+    THEN
+          SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Email-ul trebuie sa nu contina spatiu gol si sa contina @';
+    END IF; 
+ END;
+//
+DELIMITER ;
+
+select 'my_email@user.ro' regexp '[ ]{0}\\@[ ]{0}';		- Okay
+select 'my email@user.ro' regexp '[ ]{0}\\@[ ]{0}';		- Eroare
+select 'my_emailuser.ro' regexp '[ ]{0}\\@[ ]{0}';		- Eroare
+select 'my_email@ user.ro' regexp '[ ]{0}\\@[ ]{0}';		- Eroare
+?????????
+ 

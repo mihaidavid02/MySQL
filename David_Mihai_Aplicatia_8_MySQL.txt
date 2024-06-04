@@ -1,0 +1,267 @@
+Se va lucra pe baza din laboratorul 7.
+
+
+SELECTARE DATE DIN MAI MULTE TABELE
+INNER JOIN
+
+1) Afisati toate comenzile impreuna cu numele clientilor care le-au facut.
+
+select * from clienti join comenzi 
+on comenzi.cnp=clienti.cnp;
+
+2) Afisati toate cartile cumparate in cadrul comenzii cu id 2 impreuna cu titlul si pretul fiecareia.
+
+select c.titlu,c.pret from carti_comandate as cc join carti as c
+on cc.id_carte=c.id_carte
+where cc.id_comanda=2;
+
+3) Afisati toate cartile cumparate din tabelul carti_comandate impreuna cu titlul si pretul fiecareia. Se vor afisa o singura data folosind 
+'select distinct'
+
+select distinct c.titlu,c.pret from carti as c join carti_comandate as cc
+on cc.id_carte=c.id_carte;
+
+INNER JOIN pe mai multe tabele
+
+4) Afisati toate cartile cumparate de clientul cu cnp '1234'.
+
+select cl.cnp,cl.nume,c.* from clienti as cl join comenzi as com 
+on com.cnp=cl.cnp 
+inner join carti_comandate as cc
+on cc.id_comanda=com.id_comanda
+inner join carti as c
+on c.id_carte=cc.id_carte
+where cl.cnp='1234';
+
+5) Afisati toti clientii care au cumparat cartea cu id_carte ='1236'.
+
+select cl.* from clienti as cl join comenzi as com
+on cl.cnp=com.cnp
+inner join carti_comandate as cc
+on com.id_comanda=cc.id_comanda
+where cc.id_carte='1236';
+
+LEFT JOIN
+
+
+6) Afisati toti clientii care nu au dat nicio comanda niciodata.
+
+select distinct * from clienti as cl left join comenzi as com
+on cl.cnp=com.cnp
+where com.cnp is null;
+
+7) Afisati toate cartile care n-au fost cumparate niciodata.
+
+select distinct * from carti as c left join carti_comandate as cc
+on c.id_carte=cc.id_carte
+where cc.id_carte is null;
+
+NATURAL JOIN
+
+8) Afisati toate comenzile impreuna cu numele clientilor care le-au dat.
+
+select * from comenzi natural join clienti;
+
+9) Afisati toate comenzile(id_comanda) impreuna cu cartile(titlu, id_carte) cumparate in cadrul lor. 
+
+select cc.id_comanda,c.titlu,c.id_carte from carti_comandate as cc natural join carti as c;
+
+
+
+
+CREATE .. SELECT
+
+10) Creati un tabel care sa contina fiecare carte(id_ul ei) din carti_comandate impreuna cu  numele celui care a cumparat-o. Alegeti nume sugestive pt coloane.
+
+drop table if exists cumparatori_carti;
+CREATE TABLE cumparatori_carti 
+SELECT cc.id_carte,cl.nume FROM clienti as cl JOIN comenzi as com
+ON cl.cnp=com.cnp
+INNER JOIN carti_comandate as cc 
+ON com.id_comanda=cc.id_comanda;
+
+
+CREATE VIEW. Creati tabelele virtuale specificate.
+
+11) Toate comenzile(id, id_client, valoare, data) impreuna cu numele clientului scris cu litere mari.
+
+CREATE VIEW comenzi_clienti AS
+SELECT com.id_comanda as id, cl.cnp as id_client, com.valoare as valoare, com.data as data, upper(cl.nume) as nume
+FROM clienti as cl JOIN comenzi as com
+ON cl.cnp=com.cnp;
+
+12) Toate cartile(id_carte, titlu, pret) din carti_cumparate impreuna cu id_comanda corespunzatoare.
+
+CREATE VIEW carti_cumparate AS
+SELECT c.id_carte,c.titlu,c.pret,cc.id_comanda FROM carti as c LEFT JOIN carti_comandate as cc
+ON c.id_carte=cc.id_carte
+WHERE cc.id_carte is not null;
+
+
+
+UNION, UNION ALL
+
+13) Selectati toti clientii(nume, id) care n-au dat nicio comanda
+apoi selectati  toti clientii care au plasat cel putin o comanda,
+apoi uniti cele 2 tabele cu UNION ALL.
+
+SELECT DISTINCT cl.nume,cl.cnp FROM clienti as cl
+LEFT JOIN comenzi as com ON cl.cnp=com.cnp
+WHERE com.cnp is null
+UNION ALL
+SELECT DISTINCT cl.nume,cl.cnp FROM clienti as cl
+RIGHT JOIN comenzi as com ON cl.cnp=com.cnp
+WHERE com.cnp is not null;
+
+14) Selectati toti clientii(cnp) din tabelul comenzi care n-au comenzi in 2019, apoi toti clientii(id_client) din clienti care n-au dat nicio comanda niciodata apoi faceti reuniunea cu UNION.  Acestia ar fi toti clientii care n-au comandat nimic in 2019.
+
+
+
+#Varianta corecta
+select cnp from comenzi where cnp not in (select cnp from comenzi 
+where year(comenzi.data)=2019)
+union
+SELECT cl.cnp as id_client FROM comenzi as com 
+RIGHT JOIN clienti as cl ON cl.cnp=com.cnp
+WHERE com.cnp is null;
+
+#Varianta incorecta 
+SELECT cl.cnp FROM clienti as cl
+LEFT JOIN comenzi as com ON cl.cnp=com.cnp
+WHERE year(com.data)!='2019'
+UNION
+SELECT cl.cnp as id_client FROM comenzi as com 
+RIGHT JOIN clienti as cl ON cl.cnp=com.cnp
+WHERE com.cnp is null;
+
+
+Sortari
+
+15) Afisati toate comenzile din 2018 in ordinea descrescatoare a valorii lor.
+ 
+SELECT * FROM comenzi
+WHERE year(data)='2018'
+ORDER BY valoare DESC;
+
+16) Afisati toti clientii in ordinea inversa a introducerii lor in tabelul clienti (ordonare descendenta dupa data_inreg). 
+
+SELECT * FROM clienti
+ORDER BY data_inreg DESC;
+
+Aliasuri
+
+17) Afisati toate comenzile clientului cu cnp '1234' impreuna cu cartile(titlu, pret) aferente. Folositi alias. 
+
+SELECT com.*,c.titlu as Titlu,c.pret as Pret FROM comenzi as com JOIN carti_comandate as cc
+ON com.id_comanda=cc.id_comanda
+INNER JOIN carti as c
+ON c.id_carte=cc.id_carte
+WHERE com.cnp='1234';
+
+
+
+
+
+FUNCTII DE COMASARE
+
+
+18) Afisati valoarea totala a comenzilor din 2019.
+
+SELECT sum(valoare) as total_comenzi_2019 FROM comenzi
+WHERE year(data)='2019';
+
+19) Cati clienti sunt inregistrati in baza dvs?
+
+SELECT count(*) as numar_clienti FROM clienti;
+
+20) Cat costa cea mai ieftina carte din baza dvs?
+
+SELECT min(pret) as pret_minim_carti FROM carti;
+
+21) Se da un tabel T1 cu doua campuri c1 si c2, ambele de tip int, ce contine 10 linii (listate de sus in jos): 
+4, 1
+-1,2
+4,1
+-1,2
+...
+4,1
+-1,2
+
+CREATE TABLE T1(
+    c1 int,
+    c2 int
+);
+insert into T1 values
+(4,1),
+(-1,2),
+(4,1),
+(-1,2),
+(4,1),
+(-1,2),
+(4,1),
+(-1,2),
+(4,1),
+(-1,2);
+
+si un tabel T2 doua campuri c2 si c3, ambele de tip int, ce contine 10 linii (listate de sus in jos): 
+-1,3
+1,1
+-1,3
+1,1
+-1,3
+1,1
+...
+-1,3
+1,1
+
+CREATE TABLE T2(
+    c2 int,
+    c3 int
+);
+
+insert into T2 values
+(-1,3),
+(1,1),
+(-1,3),
+(1,1),
+(-1,3),
+(1,1),
+(-1,3),
+(1,1),
+(-1,3),
+(1,1);
+
+Ce numar returneaza interogarile de mai jos?
+
+select sum(c1) from T1 join T2;
+
+- join o sa combine fiecare linie a tabelului T1 su fiecare linie din T2
+- deoarece fiecare linie se combina, o sa rezulte din 2 tabele cu 10 linii un tabel cu 100 de lini (10*10 linii)
+- suma numerelor din c1 dupa combinarea liniilor: 150
+
+select sum(c1) from T1 join T2 on T1.c2=T2.c2;
+
+- deoarece am impus o conditie, nu o sa potriveasca chiar fiecare linie cu fiecare linie, dar tot o sa rezulte un tabel cu 25 de linii
+- suma numerelor din c1 va fi 100 (4 din c1 ori 25 de linii)
+
+select sum(c1) from T1 join T2 on T1.c2=T2.c3;
+
+- idem ca la comanda anterioara
+
+select sum(c1) from T1 natural join T2;
+
+- o sa combine astfel incat T1.c2=T2.c2
+- suma va fi 100 ca atunci cand a fost impusa conditia T1.c2=T2.c2
+
+select sum(c1) from T1 left join T2 on T1.c2=T2.c2;
+
+- fiecare linie din T1 va fi potrivita cu fiecare linie din T2, acolo unde nu va fi corespondenta in T2 fiind valori nule (in partea dreapta);
+- o sa dea tot 100 ca la comanda anterioara, unde se va scadea 5 de 1 de la liniile care nu au corespondenta
+
+select sum(c1) from T1 left join T2 on T1.c2=T2.c2 where T2.c3 is null;
+select sum(c1) from T1 left join T2 on T1.c2=T2.c2 where T2.c3 is not null;
+select sum(c3) from T1 right join T2 on T1.c2=T2.c2 where T1.c1 is null;
+select sum(c3) from T1 left join T2 on T1.c2=T2.c2 where T1.c1 is not null;
+
+
+Incercati sa deduceti raspunsul fara a rula, apoi verificati raspunsul obtinut construind cele 2 tabele si ruland aceste interogari.

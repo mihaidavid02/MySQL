@@ -1,0 +1,71 @@
+Laborator 13
+
+INSERARE si CAUTARE intr-o baza mysql folosind serverul web APACHE, PHP si HTML.
+
+
+1) Introducere CARTI. 
+
+
+a) 
+Cititi cu atentie fisierul inserare.html de pe site. El contine un formular html pentru introducere de noi clienti.
+
+
+Construiti apoi in mod similar un fisier  html numit 
+inserare_carti.html
+
+care sa contina un formular html pentru introducere de noi carti.
+Formularul va avea 4 casute text (pentru id_carte, titlu, autor si pret) si un buton.
+
+In eticheta <form   action= >  puneti     action="inserare_carti.php"
+
+Plasati acest fisier in directorul htdocs din xampp
+
+
+b) Apoi construiti un fisier numit 
+
+inserare_carti.php 
+
+Urmarind cu atentie exemplul inserare.php scrieti in fisierul dvs
+inserare_carti.php instructiuni pentru inserarea de noi carti in baza noastra.
+
+
+Plasati  acest fisier in directorul htdocs.
+
+Verificati ca  scriptul dvs functioneaza corect.
+
+
+
+2) Cautare carti
+
+A) Construiti un fisier html numit  
+
+cautare_carti.html
+
+care sa contina un formular html pentru cautarea de carti fie dupa titlu fie dupa autor.
+Formularul va avea 
+
+1) o lista scroll-down pentru a decide dupa ce camp se face cautarea
+2) o casuta text in care se introduce secventa de caractere cautata
+3) un buton pt trimiterea datelor. 
+
+In eticheta <form   action= >  puneti     action="cautare_carti.php"
+
+Plasati acest fisier in directorul htdocs.
+
+
+b) Apoi construiti un fisier numit 
+
+cautare_carti.php 
+
+Urmarind cu atentie exemplul cautare.php pt cautare de clienti scrieti in fisierul dvs
+cautare_carti.php instructiuni pentru afisarea in browser a rezultatelor cautarii.
+
+Plasati  acest fisier in directorul htdocs. Verificati ca scripturile dvs functioneaza corect.
+
+Suplimentare
+3) Construiti un fisier html stergere_numele_dvs.html care sa contina un formular html cu o casuta text si un buton.
+In casuta text se introduce un id de carte iar la apasarea pe buton se va sterge cartea corespunzatoare acelui id. Pentru aceasta construiti si un fisier stergere_carti.php.
+
+4) Construiti un un fisier html updatare_carti.html care sa contina un formular html cu doua casute text si un buton.
+In prima casuta text se introduce un id de carte, in a doua se introduce un numar(acesta va fi noul pret)  iar la apasarea pe buton se va updata pretul cartii corespunzatoare id-ului introdus cu pretul introdus. Pentru aceasta construiti si un fisier updatare_carti.php.
+Urmariti cu atentie fisierele corespunzatoare din arhiva trimisa.

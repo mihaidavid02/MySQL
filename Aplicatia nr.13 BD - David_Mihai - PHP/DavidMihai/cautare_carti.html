@@ -1,0 +1,25 @@
+<html>
+<head>
+  <title>Cautare</title>
+</head>
+
+<body>
+  <h1>Cautare carti</h1>
+
+  <form action="cautare_carti.php" method="post">
+    Cautare dupa:<br />
+    <select name="searchtype">
+      <option value="id_carte">Id carte</option>
+      <option value="titlu">Titlu</option>
+      <option value="autor">Autor</option>
+	  <option value="pret">pret</option>
+    </select>
+    <br />
+    Tipariti textul cautat:<br />
+    <input name="searchterm" type="text">
+    <br />
+    <input type="submit" value="Cautati">
+  </form>
+
+</body>
+</html>

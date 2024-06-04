@@ -1,0 +1,378 @@
+TRIGGERI
+
+Fie tabelul:
+
+CREATE TABLE clienti1 (
+  cnp char(13) NOT NULL PRIMARY KEY,
+  nume VARCHAR(20) NOT NULL, 
+  an_nastere int NOT NULL,
+  data_inreg DATE
+) ;
+ 
+
+Creati triggerii specificati mai jos. La toti triggerii verificati ca functioneaza corect incercand inserarea de valori care ar trebui acceptate si valori care nu ar trebui acceptate.
+Dupa ce ati verificat ca functioneaza corect il veti sterge cu comanda 
+
+drop trigger nume_trigger;
+
+FUNCTII UTILE:
+use lib3_david_mihai;
+select * from clienti1;
+
+
+
+1) creati un trigger pentru a adauga automat ca  data a inregistrarii data curenta in tabelul clienti1 (indiferent daca o data a fost specificata sau nu).
+
+DELIMITER //
+CREATE TRIGGER data_curenta BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+ 
+    set NEW.data_inreg=curdate();
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1235,'Ion');
+
+
+1') creati un trigger pentru a verifica faptul ca data ce se doreste a fi introdusa este anterioara datei curente, iar daca nu se specifica o data a inregistrarii atunci sa fie introdusa data curenta.
+
+DELIMITER //
+CREATE TRIGGER data_curenta BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+ 
+    IF(date(NEW.data_inreg)<curdate())
+
+    THEN
+
+    	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Data inregistrarii trebuie sa fie dupa data curenta';
+
+    ELSE
+
+	set NEW.data_inreg=curdate();
+	
+    END IF;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume,data_inreg) values (1238,'Ion','1990-10-17');	-	EROARE
+insert into clienti1(cnp,nume) values (1239,'Ion');				-	OK
+
+
+2) creati un trigger ASOCIAT TABELULUI clienti1 pentru a accepta la inserare numai nume formate din exact 4 caractere.
+
+DELIMITER //
+CREATE TRIGGER nume_4caractere BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+ 
+    IF(NEW.nume not like "____")
+
+    THEN
+
+    	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Numele trebuie sa fie din exact 4 caractere';
+	
+    END IF;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1240,'Andrei');	-	EROARE
+insert into clienti1(cnp,nume) values (1240,'Andr');	-	OK
+
+
+3)creati un trigger ASOCIAT TABELULUI clienti1 pentru a accepta la inserare numai nume care incep cu A mare sau mic.
+
+DELIMITER //
+CREATE TRIGGER nume_start_Aa BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+ 
+    IF(NEW.nume not like "A%")
+
+    THEN
+
+    	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu litera A sau a';
+	
+    END IF;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1241,'Andr');	-	OK
+insert into clienti1(cnp,nume) values (1242,'andr');	-	OK
+insert into clienti1(cnp,nume) values (1243,'Enea');	-	EROARE
+
+
+4) creati un trigger ASOCIAT TABELULUI clienti1 pentru a accepta la inserare numai nume care incep cu A mare.
+
+DELIMITER //
+CREATE TRIGGER nume_start_A_mare BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+ 
+    IF(ascii(mid(NEW.nume,1,1))<>65)
+
+    THEN
+
+    	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Numele trebuie sa inceapa cu litera A';
+	
+    END IF;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1243,'Andy');	-	OK
+insert into clienti1(cnp,nume) values (1247,'anto');	-	EROARE
+
+
+5) creati un trigger ASOCIAT TABELULUI clienti1 care sa accepte la inserare numai nume din maxim 4 caractere, toate litere. 
+
+DELIMITER //
+CREATE TRIGGER nume_4litere BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+
+    DECLARE k INT;
+
+    set k=0;
+
+    iteratie:LOOP
+    set k=k+1;
+	if(k>length(NEW.nume)) then
+		LEAVE iteratie;
+	end if;
+
+	IF(length(NEW.nume)>4)
+
+	THEN
+		
+		SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'Numele trebuie sa fie din maxim 4 litere';
+	END IF;
+
+        IF(ascii(mid(NEW.nume,k,1))<65 || ascii(mid(NEW.nume,k,1))>122 ||  ascii(mid(NEW.nume,k,1))>90 && (ascii(mid(NEW.nume,k,1))<97))
+
+        THEN
+
+    	    SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'Numele trebuie sa fie doar din litere';
+	
+        END IF;
+
+    END LOOP iteratie;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1254,'Aaaa');	-	OK
+insert into clienti1(cnp,nume) values (1254,'Aaaaaa');	-	EROARE
+insert into clienti1(cnp,nume) values (1255,'A6,t');	-	EROARE
+
+
+6) creati un trigger ASOCIAT TABELULUI clienti1 care sa accepte la inserare numai cnp din 4 caractere, toate cifre.
+
+DELIMITER //
+CREATE TRIGGER cnp_4cifre BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+
+    DECLARE k INT;
+
+    set k=0;
+
+    iteratie:LOOP
+    set k=k+1;
+	if(k>length(NEW.cnp)) then
+		LEAVE iteratie;
+	end if;
+
+	IF(length(NEW.cnp)<>4)
+
+	THEN
+		
+		SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie din exact 4 cifre';
+	END IF;
+
+        IF(ascii(mid(NEW.cnp,k,1))<48 || ascii(mid(NEW.cnp,k,1))>57)
+
+        THEN
+
+    	    SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie din exact 4 cifre';
+	
+        END IF;
+
+    END LOOP iteratie;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (12002,'Aaaa');	-	EROARE
+insert into clienti1(cnp,nume) values (1301,'Abcd');	-	OK
+
+
+7) creati un trigger ASOCIAT TABELULUI clienti1 in care sa verificati la inserare ca cnp-ul e din EXACT 4 cifre iar suma primelor 2 este egala cu al treilea.
+
+DELIMITER //
+CREATE TRIGGER cnp_4cifre_3suma2 BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+
+    DECLARE k INT;
+
+    set k=0;
+
+    iteratie:LOOP
+    set k=k+1;
+	if(k>length(NEW.cnp)) then
+		LEAVE iteratie;
+	end if;
+
+	IF(length(NEW.cnp)<>4)
+
+	THEN
+		
+		SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie din exact 4 cifre';
+	END IF;
+
+	IF(cast(mid(NEW.cnp,1,1) as unsigned)+cast(mid(NEW.cnp,2,1) as unsigned)<>cast(mid(NEW.cnp,3,1) as unsigned))
+
+	THEN
+		
+		SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'Suma primelor doua cifre trebuie sa fie egala cu a treia cifra din CNP';
+	END IF;
+
+        IF(ascii(mid(NEW.cnp,k,1))<48 || ascii(mid(NEW.cnp,k,1))>57)
+
+        THEN
+
+    	    SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'CNP-ul trebuie sa fie din exact 4 cifre';
+	
+        END IF;
+
+    END LOOP iteratie;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (12002,'Aaaa');	-	EROARE
+insert into clienti1(cnp,nume) values (1358,'Abcd');	-	EROARE
+insert into clienti1(cnp,nume) values (1345,'Abcd');	-	OK
+
+
+8) creati un trigger ASOCIAT TABELULUI carti din laborator 4  pentru a accepta la inserare numai preturi  >10.5.
+
+DELIMITER //
+CREATE TRIGGER preturi_10 BEFORE  INSERT  ON carti
+ FOR EACH ROW
+ BEGIN
+ 
+    IF(NEW.pret<=10.5)
+
+    THEN
+
+    	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Pretul trebuie sa fie mai mare decat 10.5';
+	
+    END IF;
+
+ END;
+//
+DELIMITER ;
+
+insert into carti(id_carte,titlu,autor,pret) values (444,'Bio','Ana',7);	-	EROARE
+insert into carti(id_carte,titlu,autor,pret) values (444,'Bio','Ana',11);	-	OK
+
+
+9) creati un trigger ASOCIAT TABELULUI clienti1 pt a ACCEPTA la inserare numai nume din 5 litere mari.
+
+DELIMITER //
+CREATE TRIGGER nume_5litere_mari BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+
+    DECLARE k INT;
+
+    set k=0;
+
+    IF(length(NEW.nume)<>5)
+
+    THEN
+		
+	SIGNAL SQLSTATE '45000'
+        	SET MESSAGE_TEXT = 'Numele trebuie sa fie din exact 5 litere';
+    END IF;
+
+    iteratie:LOOP
+    set k=k+1;
+	if(k>length(NEW.nume)) then
+		LEAVE iteratie;
+	end if;
+
+        IF(ascii(mid(NEW.nume,k,1))<65 || ascii(mid(NEW.nume,k,1))>122)
+
+        THEN
+
+    	    SIGNAL SQLSTATE '45000'
+        	    SET MESSAGE_TEXT = 'Numele trebuie sa fie doar din litere mari';
+	
+        END IF;
+
+    END LOOP iteratie;
+
+ END;
+//
+DELIMITER ;
+
+insert into clienti1(cnp,nume) values (1254,'Aaaa');	-	EROARE
+insert into clienti1(cnp,nume) values (1254,'AAAA');	-	EROARE
+insert into clienti1(cnp,nume) values (1255,'AAAAA');	-	OK
+
+
+10) creati un trigger ASOCIAT TABELULUI clienti1 pentru a completa automat acea coloana cu anul nasterii corespunzator cnp-ului introdus.  
+
+DELIMITER //
+CREATE TRIGGER an_nastere_cnp BEFORE  INSERT  ON clienti1
+ FOR EACH ROW
+ BEGIN
+
+    DECLARE an_nastere INT;
+
+    IF(cast(mid(NEW.cnp,1,1) as unsigned)=1 || cast(mid(NEW.cnp,1,1) as unsigned)=2)
+
+    THEN
+	set an_nastere=1900 + cast(mid(NEW.cnp,2,2) as unsigned);
+    ELSE
+	set an_nastere=2000 + cast(mid(NEW.cnp,2,2) as unsigned);
+    END IF;
+
+    NEW.cnp=an_nastere;
+
+ END;
+//
+DELIMITER ;
+
+
+11) Creati un trigger pentru a verifica faptul ca anul nasterii corespunde cnp-ului introdus.
+
+

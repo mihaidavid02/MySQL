@@ -1,0 +1,86 @@
+FUNCTII PENTRU MANIPULAREA DATELOR
+
+1) Afisati tabelul CARTI in formatul:
+
+ID CARTE: (id_carte); titlu carte: (titlu); pret carte: (pret)
+
+SELECT id_carte as "ID CARTE",titlu as "titlu carte",pret as "pret" FROM carti;
+
+2) Afisati campul pret din tabelul carti cu 2 zecimale exacte.
+
+SELECT truncate(pret,2) FROM carti;
+
+3) Afisati campul pret din tabelul carti cu valoarea lui rotunjita la 2 zecimale.
+
+SELECT round(pret,2) FROM carti;
+
+4) Afisati tabelul clienti cu 3 zile adunate la campul data.
+
+SELECT cnp,nume,oras,tel,DATE_ADD(data_inreg, INTERVAL 3 DAY) as "Data inreg + 3 zile" FROM clienti; 
+
+5) Afisati diferenta intre data curenta si data stocata in tabelul comenzi.
+
+SELECT DATEDIFF(curdate(),data) FROM comenzi;		#pt. cerinta
+SELECT DATEDIFF("2024-12-11",data) FROM comenzi;	#pt. verificare
+
+Interogari UPDATE,DELETE, ALTER
+--------------------------------------------------
+1) mariti pretul tuturor cartilor cu o unitate.
+
+UPDATE carti SET pret=pret+1;
+
+2) Mariti pretul cartii cu id '1234' cu 2 ron.
+
+UPDATE carti SET pret=pret+2
+WHERE id_carte='1234';
+
+3) Scadeti cu o unitate pretul cartilor ce nu au fost cumparate niciodata.
+
+UPDATE carti as c 
+LEFT JOIN carti_comandate as cc 
+ON c.id_carte=cc.id_carte  
+SET pret=pret-1
+WHERE cc.id_comanda IS NULL;
+
+4) Creati in tabelul carti o coloana numita pret_nou de tip nr real.
+
+ALTER TABLE carti add column pret_nou double;
+
+5) Copiati datele din coloana pret in coloana pret_nou.
+
+UPDATE carti SET pret_nou=pret;
+
+6) Modificati tipul coloanei titlu din carti pentru ca sa fie de tip varchar(50).
+
+ALTER TABLE carti MODIFY titlu VARCHAR(50);
+
+7) Redenumiti coloana pret_nou cu numele pret_nou1.
+
+ALTER TABLE carti CHANGE COLUMN pret_nou pret_nou1 double;
+
+8) Stergeti declaratia de cheia externa id_client din tabelul comenzi.
+
+show create table comenzi;
+ALTER TABLE comenzi DROP FOREIGN KEY `comenzi_ibfk_1`;
+
+Fie tabelul test
+create table test(id int not null primary key, a1 int);
+
+
+9) Creati o coloana noua numita id1 de tip integer in tabelul test apoi mutati cheia primara din tabel pe id1.
+
+ALTER TABLE test ADD COLUMN id1 INT, DROP PRIMARY KEY, ADD PRIMARY KEY(id1);
+
+10) Stergeti coloana pret_nou creata anterior in tabelul carti.
+
+ALTER TABLE carti DROP COLUMN pret_nou1; 
+
+11) Stergeti comanda cu id 1 precum.
+
+DELETE FROM comenzi 
+WHERE id_comanda=1;
+
+12) Stergeti clientul cu id_client='1235'.
+
+DELETE FROM clienti
+WHERE cnp='1235';

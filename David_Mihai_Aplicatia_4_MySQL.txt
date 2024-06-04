@@ -1,0 +1,367 @@
+Proiect laborator 4
+
+
+COLOANE VIRTUALE
+
+1) In baza din L3, creati un nou tabel numit comenzi1 similar cu comenzi folosind CREATE. In interogarea CREATE stergeti  declaratiile de chei externe si  adaugati apoi in tabelul comenzi1 o coloana numita costuri si una profit. Generati coloana profit asa ca ea sa fie coloana virtuala calculata ca diferenta dintre coloanele 
+valoarea si costuri. 
+
+CREATE TABLE comenzi1 (
+  id_comanda int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  cnp char(13) NOT NULL, 
+  valoare double NOT NULL,
+  data Date NOT NULL, 
+  costuri double NOT NULL,
+  profit double GENERATED ALWAYS AS (valoare-costuri)    
+);
+
+2) verificati (inserand valori in tabelul comenzi1) ca in coloana profit numerele sunt calculate in mod automat.
+
+insert into comenzi1(cnp,valoare,data,costuri) values
+(1234,15,'2023-10-23',10),
+(1235,10,'2023-09-18',5),
+(1265,20,'2023-10-13',8);
+
+
+CHECK CONSTRAINT
+
+
+In tabelul carti4 construit cu comanda de mai jos.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c2 check (id_carte) 
+) ;
+ 
+
+introduceti succesiv urmatoarele constrangeri:
+
+1) Pretul sa fie nr  strict pozitiv
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date
+) ;
+
+select 4>0;	->	Val. 1
+select -1>0;	->	Val. 0
+
+2) Codul cartii sa fie din exact 5 caractere.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c2 check (id_carte like '_____') 
+) ;
+
+select '12345' like '_____';	->	Val. 1
+select '1234' like '_____';	->	Val. 0
+
+3) Autor din exact 3 caractere.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c3 check (autor like '___') 
+) ;
+
+select 'Ana' like '___';	->	Val. 1
+select 'Matei' like '___';	->	Val. 0
+
+4) Autor sa inceapa cu litera A(mare sau mic)
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c3 check (autor like 'a%') 
+) ;
+
+select 'Ana' like 'a%';		->	Val. 1
+select 'ana' like 'a%';		->	Val. 1
+select 'Matei' like 'a%';	->	Val. 0
+select 'matei' like 'a%';	->	Val. 0
+
+5) Autor sa inceapa cu A mare.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c5 check (autor like ascii(mid(autor,1,1))=ascii('A')) 
+) ;
+
+select 'Ana' like '%' and ascii(mid('Ana',1,1))=ascii('A');		->	Val. 1
+select 'ana' like '%' and ascii(mid('ana',1,1))=ascii('A');		->	Val. 0
+
+6) Autor sa inceapa cu A mare si sa fie din exact 3 caractere.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c6 check (autor like '___' and ascii(mid(autor,1,1))=ascii('A')) 
+) ;
+
+select 'Ana' like '___' and ascii(mid('Ana',1,1))=ascii('A');		->	Val. 1
+select 'ana' like '___' and ascii(mid('ana',1,1))=ascii('A');		->	Val. 0
+select 'Andrei' like '___' and ascii(mid('Ana',1,1))=ascii('A');	->	Val. 0
+
+7) Titlul cartii sa contina secventa 'Mate' ( litere mari sau mici).
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c7 check (titlu like '%mate%')
+) ;
+
+select 'MaTe' like '%mate%';				->	Val. 1
+select 'MATEmatica' like '%mate%';			->	Val. 1
+select 'Carte de mAte si geometrie' like '%mate%';	->	Val. 1
+select 'InFO' like '%mate%';				->	Val. 0
+
+8) Data sa fie ulterioara anului 1990.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c8 check (year(data_inregistrarii)>=1990)
+) ;
+
+select year(date('2002-10-23'))>=1990;		->	Val. 1
+select year(date('1989-10-23'))>=1990;		->	Val. 0
+
+9) Luna corespunzatoare datei sa fie Octombrie.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c9 check (month(data_inregistrarii)=10)
+) ;
+
+select month(date('2002-10-23'))=10;		->	Val. 1
+select month(date('1989-11-23'))=10;		->	Val. 0
+
+10) Luna sa fie Octombrie si anul ulterior anului 1930. 
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c10 check (month(data_inregistrarii)=10 and year(data_inregistrarii)>=1930)
+) ;
+
+select month(date('2002-10-23'))=10 and year(date('2002-10-23'))>=1930;		->	Val. 1
+select month(date('1929-10-23'))=10 and year(date('1929-10-23'))>=1930;		->	Val. 0
+select month(date('1989-11-23'))=10 and year(date('1989-11-23'))>=1930;		->	Val. 0
+
+11) Autor contine litera a(mare sau mica) pe pozitia 2.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c11 check (autor like '_a%')
+) ;
+
+select "Maria" like '_a%';	->	Val. 1
+select "MARIA" like '_a%';	->	Val. 1
+select "Ana" like '_a%';	->	Val. 0
+
+12) Autor  contine litera a mic pe pozitia 2.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c12 check (autor like '%' and ascii(mid(autor,2,1))=ascii('a'))
+) ;
+
+select "Maria" like '%' and ascii(mid("Maria",2,1))=ascii('a');		->	Val. 1
+select "MARIA" like '%' and ascii(mid("MARIA",2,1))=ascii('a');		->	Val. 0
+select "Ana" like '%' and ascii(mid("Ana",2,1))=ascii('a');		->	Val. 0
+
+13) Autor  contine pe prima pozitie litera a sau litera b.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c13 check (autor like '%' and (ascii(mid(autor,2,1))=ascii('a') or ascii(mid(autor,2,1))=ascii('b')))
+) ;
+
+select 'Maria' like '%' and (ascii(mid('Maria',2,1))=ascii('a') or ascii(mid('Maria',2,1))=ascii('b'));		->	Val. 1
+select 'MARIA' like '%' and (ascii(mid('MARIA',2,1))=ascii('a') or ascii(mid('MARIA',2,1))=ascii('b'));		->	Val. 0
+select 'Abel' like '%' and (ascii(mid('Abel',2,1))=ascii('a') or ascii(mid('Abel',2,1))=ascii('b'));		->	Val. 1
+select 'ABEL' like '%' and (ascii(mid('ABEL',2,1))=ascii('a') or ascii(mid('ABEL',2,1))=ascii('b'));		->	Val. 1
+select 'Mike' like '%' and (ascii(mid('Mike',2,1))=ascii('a') or ascii(mid('Mike',2,1))=ascii('b'));		->	Val. 0
+
+14) Autor  contine pe prima pozitie a si pe ultima pozitie b (mari sau mici).
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c14 check (autor like 'a%b')
+) ;
+
+select 'asddfb' like 'a%b';	->	Val. 1
+select 'AsdfB' like 'a%b';	->	Val. 1
+select 'Asdfb' like 'a%b';	->	Val. 0
+select 'MDFGH' like 'a%b';	->	Val. 0
+
+15) Autor  contine ambele litere a si b, mari sau mici.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c15 check (autor like '%a%b%' OR autor like '%b%a%' OR autor like '%ab%' OR autor like '%ba%')
+) ;
+
+select 'Anaab' like '%a%b%' or 'Anaab' like '%b%a%' or 'Anaab' like '%ab%' or 'Anaab' like '%ba%';		->	Val. 1
+select 'banana' like '%a%b%' or 'banana' like '%b%a%' or 'banana' like '%ab%' or 'banana' like '%ba%';		->	Val. 1
+select 'afgjBjhgk' like '%a%b%' or 'banana' like '%b%a%' or 'banana' like '%ab%' or 'banana' like '%ba%';	->	Val. 1
+select 'Bghahkl' like '%a%b%' or 'banana' like '%b%a%' or 'banana' like '%ab%' or 'banana' like '%ba%';		->	Val. 1
+select 'fgj' like '%a%b%' or 'fgj' like '%b%a%' or 'fgj' like '%ab%' or 'fgj' like '%ba%';			->	Val. 0
+
+16) Autor  contine litera a sau litera b sau ambele (mari sau mici).
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c16 check (autor like 'b%' OR autor like '%b%' OR autor like '%a%' OR autor like 'a%')
+) ;
+
+select 'Ana' like 'b%' OR 'Ana' like '%b%' OR 'Ana' like '%a%' OR 'Ana' like 'a%';		->	Val. 1
+select 'Bob' like 'b%' OR 'Bob' like '%b%' OR 'Bob' like '%a%' OR 'Bob' like 'a%';		->	Val. 1
+select 'Cna' like 'b%' OR 'Cna' like '%b%' OR 'Cna' like '%a%' OR 'Cna' like 'a%';		->	Val. 1
+select 'Cob' like 'b%' OR 'Cob' like '%b%' OR 'Cob' like '%a%' OR 'Cob' like 'a%';		->	Val. 1
+select 'Misty' like 'b%' OR 'Misty' like '%b%' OR 'Misty' like '%a%' OR 'Misty' like 'a%';	->	Val. 0
+
+17) Codul cartii incepe cu 1,2 sau 5.
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c17 check (id_carte like '1%' or id_carte like '2%' or id_carte like '5%')
+) ;
+
+select 123 like '1%' or 123 like '2%' or 123 like '5%';		->	Val. 1
+select 223 like '1%' or 223 like '2%' or 223 like '5%';		->	Val. 1
+select 523 like '1%' or 523 like '2%' or 523 like '5%';		->	Val. 1
+select 612 like '1%' or 612 like '2%' or 612 like '5%';		->	Val. 0
+
+18) Autor nu incepe cu a (mare sau mic).
+
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c18 check (autor not like 'a%')
+) ;
+
+select 'Bob' not like 'a%';	->	Val. 1
+select 'Ana' not like 'a%';	->	Val. 0
+select 'ana' not like 'a%';	->	Val. 0
+
+19) Autor nu incepe nici cu a, nici cu b (mari sau mici).
+ 
+drop table if exists carti4;
+CREATE TABLE carti4 (
+  id_carte char(13) NOT NULL PRIMARY KEY,
+  titlu VARCHAR(20) NOT NULL, 
+  autor VARCHAR(20) NOT NULL,
+  pret double not null,
+  data_inregistrarii Date,
+ constraint c19 check (autor not like 'a%' and autor not like 'b%')
+) ;
+
+select 'Matei' not like 'a%' and 'Matei' not like 'b%';		->	Val. 1
+select 'Bob' not like 'a%' and 'Bob' not like 'b%';		->	Val. 0
+select 'bob' not like 'a%' and 'bob' not like 'b%';		->	Val. 0
+select 'Ana' not like 'a%' and 'Ana' not like 'b%';		->	Val. 0
+select 'ana' not like 'a%' and 'ana' not like 'b%';		->	Val. 0
+
+
+
+La fiecare cerinta verificati ca regula de validare functioneaza incercand sa introduceti date in tabel. 
+
+Inainte de a scrie regula de validare in tabel verificati ca expresia logica ce face filtrarea corecta a datelor functioneaza:
+
+ex: nume ce incep cu A(mare sau mic)
+
+select 'Alina' like 'A%';
+  
+returneaza valoarea 1, insa
+
+select 'MAlina' like 'A%';
+
+returneaza valoarea 0.

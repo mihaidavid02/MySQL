@@ -1,0 +1,248 @@
+Test nr.2 BD - David Mihai, gr.1332
+
+Se vor folosi tabelele din baza postata in laboratorul 7.
+Interogarile vor fi create asa incat, indiferent de datele ce pot fi introduse in tabele, sa fie afisat raspunsul corect.
+
+
+1) Listati toti clientii cu numele ION sau DAN.
+
+# Pt. toti cu nume ce contine ION sau DAN
+select * from clienti
+where nume regexp 'ION' or nume regexp 'DAN';
+
+# Pt. toti cu nume exact ION sau DAN
+select * from clienti
+where nume='ION' or nume='DAN';
+
+2) Listati toate lunile in care s-au inregistrat clienti.
+
+# Valori distincte
+select distinct month(data_inreg) as 'Luna inregistrarii' from clienti;
+
+# Toate valorile
+select month(data_inreg) as 'Luna inregistrarii' from clienti;
+
+3) Listati toate comenzile(id_comanda) care contin cel putin o carte cu pret <3.
+
+select distinct com.id_comanda from comenzi as com
+natural join carti_comandate as cc
+natural join carti as c
+where c.pret<3;
+
+4) Listati toate cartile(id_carte) cumparate de clientii al caror nume incepe cu I.
+
+select c.id_carte from carti as c
+natural join carti_comandate as cc
+natural join comenzi as com
+natural join clienti as cl
+where cl.nume regexp '^I';
+
+5) Un tabel t1 are coloane c1,c2, iar un tabel t2 are coloane c1, c3.
+t1 contine liniile
+c1 c2
+-------
+1   2
+2   3
+3   2
+4   3
+....
+1000 3
+
+iar t2 contine liniile
+c1 c3
+-----
+3  1
+4  2
+3  3
+4  4
+....
+3 999
+4 1000
+
+
+ce afiseaza interogarea de mai jos?
+
+select sum(t1.c2) from t1 join t2;
+
+Explicati raspunsul dvs.
+
+# Raspuns
+
+## Explicatii
+
+### Format tabele
+Ambele tabele au 1000 de linii si 2 coloane.
+
+### Sintaxa JOIN
+Aceasta sintaxa combina fiecare linie din tabelul t1 cu fiecare linie din tabelul t2.
+
+Rezulta ca o sa se combine fiecare din cele 1000 de linii ale tabelului t1 cu fiecare din cele 1000 de linii din tabelul t2, rezultand 1000*1000 de linii (1.000.000 linii).
+
+### Functia de comasare sum(t1.c2)
+Aceasta functie va aduna toate valorile din coloana c2 a tabelului t1 DUPA ce actioneaza sintaxa JOIN si creeaza tabelul cu 1.000.000 de linii.
+Avand in aceasta coloana valori de 2 si 3, inseamna ca dupa alipire vom avea 500.000 de valori 2 si 500.000 de valori 3.
+Facand suma, o sa rezulte 2*500.000 + 3*500.000 = 1.000.000 + 1.500.000 = 2.500.000.
+
+## Concluzie
+Acest select o sa afiseze valoarea 2.500.000.
+
+6) Un tabel t1 are coloane c1,c2, iar un tabel t2 are coloane c1, c3.
+t1 contine liniile
+c1 c2
+-------
+1   2
+2   3
+3   2
+4   3
+....
+1000 3
+
+iar t2 contine liniile
+c1 c3
+-----
+3  1
+4  2
+3  3
+4  4
+....
+3 999
+4 1000
+
+
+ce afiseaza interogarea de mai jos?
+
+select count(*) from t1 inner join t2 on t1.c1=t2.c1;
+
+Explicati raspunsul dvs.
+
+# Raspuns
+
+## Explicatii
+
+### Format tabele
+Ambele tabele au 1000 de linii si 2 coloane, avand amandoua o coloana numita 'c1'.
+
+### Sintaxa INNER JOIN
+Aceasta sintaxa este un sinonim pentru JOIN, si deci actioneaza la fel ca JOIN-ul intalnit anterior.
+Diferenta este ca a fost impusa conditia de asociere t1.c2=c2.c1 cu ajutorul sintaxei ON; astfel, in loc sa combine fiecare linie din t1 cu fiecare linie din t2 fara vreun sens, o sa incerce sa combine liniile care au aceeasi valoare in coloana c2 in ambele tabele.
+
+Deoarece in coloana c1 din tabelul t1 sunt valori care reprezinta efectiv o numerotare a liniilor de la 1 la 1000, iar in tabelul t2 in aceasta coloana exista doar valorile 3 si 4, o sa se combine doar 2 linii din tabelul t1 cu toate cele 1000 de linii din t2.
+Astfel, o sa rezulte un tabel cu 2*1000 linii (2000 de linii).
+
+### Functia de comasare count(*)
+Aceasta functie numara toate liniile cu valori nenule.
+Deoarece prin folosirea lui INNER JOIN si a conditie de asociere a rezultat un tabel cu 2000 de linii (toate nenule), o sa rezulte valoarea 2000.
+
+## Concluzie
+Acest select o sa afiseze valoare 2000.
+
+7) Un tabel t1 are coloane c1,c2, iar un tabel t2 are coloane c1, c3.
+t1 contine liniile
+c1 c2
+-------
+1   2
+2   3
+3   2
+4   3
+....
+1000 3
+
+iar t2 contine liniile
+c1 c3
+-----
+3  1
+4  2
+3  3
+4  4
+....
+3 999
+4 1000
+
+
+ce afiseaza interogarea de mai jos?
+
+select sum(c2) from t1 natural join t2;
+
+Explicati raspunsul dvs.
+
+# Raspuns
+
+## Explicatii
+
+### Format tabele
+Ambele tabele au 1000 de linii si 2 coloane, avand amandoua o coloana numita 'c1'.
+
+### Sintaxa NATURAL JOIN
+Aceasta sintaxa combina liniile din fiecare tabeel impunand explicit o conditie evidenta (daca ambele tabele au o coloana cu aceeasi denumire, o sa le combine folosindu-se de valorile din acea coloana, ramanand o singura coloana cu aceasta denumire in tabelul final).
+
+La exercitiul anterior (ex.6) a fost aplicata o sintaxa care actioneaza la fel ca acest NATURAL JOIN, iar tabelele sunt identice.
+Rezulta astfel ca o sa avem acelasi numar de linii, mai exact 2000 de linii.
+
+### Functia de comasare sum(c2)
+Aceasta functie sumeaza toate valorile din coloana c2 din tabelul ce a rezultat din NATURAL JOIN.
+Deoarece in coloana c2 avem numai valorile 2 si 3, o sa rezulte sumarea a 500.000 de valori de 2, si 500.000 de valori de 3.
+
+3*500.000 + 2*500.000 = 1.500.000 + 1.000.000 = 2.500.000
+
+## Concluzie
+Acest select va afisa valoarea 2.500.000.
+
+8) Un tabel t1 are coloane c1,c2, iar un tabel t2 are coloane c1, c3.
+t1 contine liniile
+c1 c2
+-------
+1   2
+2   3
+3   2
+4   3
+....
+1000 3
+
+iar t2 contine liniile
+
+c1 c3
+-----
+3  1
+4  2
+3  3
+4  4
+....
+3 999
+4 1000
+
+Ce afiseaza interogarea de mai jos?
+ select sum(t1.c2) from t1 left join t2 on t1.c1=t2.c1 where t2.c3 is null;
+
+Explicati raspunsul dvs.
+
+# Raspuns
+
+## Explicatii
+
+### Format tabele
+Ambele tabele au 1000 de linii si 2 coloane, avand amandoua o coloana numita 'c1'.
+
+### Sintaxa LEFT JOIN
+Aceasta sintaxa combina fiecare linie din t1 cu fiecare linie din t2, iar in cazul in care o linie din t1 nu are corespondent in t2, acea linie va fi nula in partea dreapta (coloanele din t2).
+
+Sintaxa ON impune aceeasi conditie ca la ex.5 si ex.6 doar ca, in loc sa ia doar cele 2000 de linii de la cazurile in care a fost gasit corespondent in t2, acum o sa fie adaugate si celelalte 998 de linii din t1 in noul tabel (valorile din coloana c3 fiind in cazul acestora nule).
+
+Deci, prin folosirea lui LEFT JOIN, vom avea:
+2000 + 998 = 2998 de linii
+
+### Sintaxa WHERE
+Conditia ce este impusa in WHERE este ca valoarea din c3 sa fie nula; deoarece, asa cum am explicat anterior, avem 998 de linii cu valori nule in c3, rezulta ca tabelul rezultat din acest select va avea 998 de linii in final.
+
+### Functia de comasare sum(t1.c2)
+Aceasta functie va suma toate valorile din coloana c2 a tabelului t1.
+Deoarece avem 998 de linii in tabelul rezultat din conditiile impuse, coloana c2 avand doar valorile 2 si 3, rezulta ca sumarea va fi facuta cu 499 de valori de 2 si 449 de valori de 3:
+2*449 + 3* 449 = 998 + 1497 = 2495
+
+## Concluzie
+Acest select va afisa valoarea 2495.
+
+9) Creati un tabel virtual (un view) in care sa afisati toate cartile ordonate crescator dupa pret.
+
+CREATE VIEW carti_ordonate_pret AS
+SELECT * FROM carti
+ORDER BY pret;

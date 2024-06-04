@@ -1,0 +1,125 @@
+GROUP BY
+
+1) Afisati toti clientii impreuna cu va loarea totala a comenzilor plasate de fiecare.
+
+select cl.*,sum(com.valoare) as Total_val_com 
+from clienti as cl 
+left join comenzi as com on cl.cnp=com.cnp
+group by cnp;
+
+2) Afisati toti clientii impreuna cu valoarea totala a comenzilor plasate de fiecare si numarul comenzilor plasate de fiecare.
+
+select cl.*, sum(com.valoare) as Total_val_com, count(com.id_comanda) as Nr_comenzi 
+from clienti as cl
+left join comenzi as com on cl.cnp=com.cnp
+group by cnp;
+
+3) Afisati clientii impreuna cu valoarea totala a comenzilor fiecaruia dar excluzand pe cei cu valoarea totala <8. 
+
+select cl.*,sum(com.valoare) as Total_val_com 
+from clienti as cl 
+left join comenzi as com on cl.cnp=com.cnp
+group by cnp
+having sum(com.valoare)>=8;
+
+4) Afisati toate cartile(id_carte,titlu) impreuna cu numarul de vanzari ale fiecareia.
+
+select c.id_carte, c.titlu, count(cc.id_carte) as Nr_vanzari from carti as c
+left join carti_comandate as cc on c.id_carte=cc.id_carte
+group by c.id_carte;
+
+5) Afisati toate cartile(titlu,id_carte) impreuna cu nr de comenzi in care au fost vandute.
+
+select c.titlu,c.id_carte, count(distinct cc.id_comanda) as Comenzi from carti as c
+left join carti_comandate as cc on c.id_carte=cc.id_carte
+group by id_carte;
+
+6) Afisati toti clientii impreuna cu nr de carti cumparate (pe fiecare in parte).
+
+select cl.*, count(cc.id_carte) as Nr_carti_cumparate from clienti as cl
+left join comenzi as com on cl.cnp=com.cnp
+left join carti_comandate as cc on com.id_comanda=cc.id_comanda
+group by cl.cnp;
+
+7) Afisati toate cartile vandute in 2019 impreuna cu cantitatea totala in care au fost vandute fiecare.
+
+select c.*,sum(cc.cantitate) as Cantitate_vanduta
+from carti as c
+left join carti_comandate as cc on c.id_carte=cc.id_carte
+left join comenzi as com on cc.id_comanda=com.id_comanda
+where year(com.data)='2023'
+group by c.id_carte;
+
+8) Afisati toate comenzile impreuna cu numarul de carti vandute in cadrul fiecareia.
+
+select com.*,sum(cc.cantitate) as Nr_carti
+from comenzi as com
+left join carti_comandate as cc on com.id_comanda=cc.id_comanda
+group by com.id_comanda;
+
+9)  Afisati fiecare client si fiecare carte cumparata de el impreuna cu suma totala platita pe ea.  
+
+select cl.*,c.*,c.pret*cc.cantitate as Suma_totala
+from clienti as cl
+left join comenzi as com on cl.cnp=com.cnp
+join carti_comandate as cc on com.id_comanda=cc.id_comanda
+join carti as c on cc.id_carte=c.id_carte
+group by c.id_carte;
+?????????????????????????????????????????
+
+10) Afisati toti clientii impreuna cu valoarea totala a comenzilor plasate de fiecare ordonate crescator dupa valoarea totala.
+
+select cl.*, sum(com.valoare) as Total_comenzi
+from clienti as cl
+left join comenzi as com
+on cl.cnp=com.cnp
+group by cl.cnp
+order by Total_comenzi;
+
+11) Afisati toti clientii impreuna cu valoarea totala a comenzilor plasate de fiecare in anul 2019.
+
+select cl.*, sum(com.valoare) as Total_comenzi_2019
+from clienti as cl
+left join comenzi as com
+on cl.cnp=com.cnp
+where year(com.data)='2019'
+group by cl.cnp
+order by Total_comenzi_2019;
+
+12) Afisati toti clientii impreuna cu valoarea totala a comenzilor plasate de fiecare in anul 2019 dar numai pe cei cu valoarea totala >8. Ordonati crescator liniile obtinute dupa valoarea totala.
+
+select cl.*, sum(com.valoare) as Total_comenzi_2019
+from clienti as cl
+left join comenzi as com
+on cl.cnp=com.cnp
+where year(com.data)='2023'
+group by cl.cnp
+order by Total_comenzi_2019;
+??????????????????????????????????
+
+13) Afisati nr de carti vandute pe fiecare an in parte. Afisati si anul.
+
+select sum(cc.cantitate) as Nr_carti_vandute,year(com.data) as An from carti_comandate as cc
+natural join comenzi as com
+group by An;
+
+14) Afisati media valorii comenzilor pe fiecare an in parte.
+
+select avg(valoare),year(data) as An from comenzi
+group by An;
+
+========================
+DISTINCT
+
+
+15) cate carti diferite au fost vandute in 2019?
+
+select distinct count(cc.*) from carti_comandate as cc
+natural join comenzi as com
+where year(com.data)='2019';
+?????????????????????????????????
+
+16) cati clienti diferiti au dat comenzi in 2019?
+17) cati clienti diferiti au cumparat cartea cu id '1234'?
+
+=========================

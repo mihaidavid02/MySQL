@@ -1,0 +1,252 @@
+PROCEDURI STOCATE
+
+Sablon:
+
+DELIMITER //
+create procedure [nume_proc](in param1 tip1,in param2 tip2)
+begin
+
+end
+//
+DELIMITER ;
+
+---------------------------------------------
+1)Construiti o procedura stocata pentru introducere de noi carti dupa sablonul 
+insereaza(id, titlu, autor, pret)
+
+DELIMITER //
+create procedure insereaza(in id_in char(13),in titlu_in varchar(20),in autor_in varchar(20),in pret_in double)
+begin
+	insert into carti(id_carte,titlu,autor,pret) values (id_in,titlu_in,autor_in,pret_in);
+end
+//
+DELIMITER ;
+
+call insereaza(2111,"FRANCEZA","FRANCAIS",7);
+
+2) construiti o procedura stocata care sa listeze toate cartile.
+dupa sablonul
+listeaza()
+
+DELIMITER //
+create procedure listeaza()
+begin
+	select * from carti;
+end
+//
+DELIMITER ;
+
+call listeaza();
+
+3)construiti o procedura stocata care sa incrementeze pretul cartilor cu o valoare data
+updateaza (valoare)
+
+DELIMITER //
+create procedure updateaza(in valoare double)
+begin
+	update carti set pret=pret+valoare;
+end
+//
+DELIMITER ;
+
+call updateaza(10);
+
+4)construiti o procedura stocata care sa scada pretul cartilor cu un procent dat.
+descreste_pret(procent)        
+procentul e introdus sub forma  descreste_pret(0.25)  inseamna ca se va scadea pretul cu 25%.   
+
+DELIMITER //
+create procedure descreste_pret(in procent double)
+begin
+	update carti set pret=pret-pret*procent;
+end
+//
+DELIMITER ;
+
+call descreste_pret(0.25);
+
+5) construiti o procedura stocata care sa afiseze pretul unei carti dupa id-ul ei.
+afiseaza(idcarte)
+
+DELIMITER //
+create procedure afiseaza(in id_carte_in char(13))
+begin
+	select pret from carti
+	where id_carte=id_carte_in;
+end
+//
+DELIMITER ;
+
+call afiseaza(1234);
+
+6) construiti o procedura stocata care sa permute pretul a doua carti date, dupa id-ul lor.
+permuta(id1,id2)
+
+DELIMITER //
+create procedure permuta(in id1 char(13),in id2 char(13))
+begin
+	declare pret_carte1 double;
+	declare pret_carte2 double;
+
+	select pret into pret_carte1 from carti where id_carte=id1;
+	select pret into pret_carte2 from carti where id_carte=id2;
+
+	update carti set pret=pret_carte2 where id_carte=id1;
+	update carti set pret=pret_carte1 where id_carte=id2;
+end
+//
+DELIMITER ;
+
+call permuta(1234,2111);
+
+7) construiti o procedura stocata care sa stearga o carte care n-a fost vanduta niciodata.
+sterge(idcarte)
+
+DELIMITER //
+create procedure sterge(in idcarte char(13))
+begin
+	delete from carti where id_carte=idcarte;
+end
+//
+DELIMITER ;
+
+call sterge(2111);
+
+8) Clasificati clientii in 3 categorii dupa valoarea totala a vanzarilor fiecaruia.
+Cei cu valoare peste 11 sunt in categ1, intre 11 si 8 sunt in categ2, sub 8 in categ 3.
+
+afiseaza_categ(cnp) ar trebui sa afiseze in ce categorie e clientul cu cnp-ul introdus.
+
+DELIMITER //
+create procedure afiseaza_categ(in cnp_in char(13))
+begin
+	declare total_comenzi double;
+	declare rezultat char(10);
+
+	select sum(com.valoare) into total_comenzi from comenzi as com
+	natural join clienti as cl
+	where cl.cnp=cnp_in;
+
+	case
+		when total_comenzi>11 then
+			set rezultat='categ1';
+		when total_comenzi>8 and total_comenzi<11 then
+			set rezultat='categ2';
+		else set rezultat='categ3';
+	end case;
+
+	select rezultat;
+end
+//
+DELIMITER ;
+
+call afiseaza_categ(1234);
+call afiseaza_categ(1236);
+
+9) Scrieti o procedura stocata care sa afiseze  'DA' daca titlul unei carti de id dat contine litera A
+si 'NU' altfel.
+afiseaza_carte(idcarte)
+
+drop procedure if exists afiseaza_carte;
+DELIMITER //
+create procedure afiseaza_carte(in idcarte char(13))
+begin
+	declare rezultat char(10);
+	declare titlu_carte varchar(20);
+
+	select titlu into titlu_carte from carti
+	where id_carte=idcarte;
+
+	if titlu_carte regexp "a" then set rezultat='DA';
+	else set rezultat='NU';
+	end if;
+
+	select rezultat;		
+end
+//
+DELIMITER ;
+
+call afiseaza_carte(1234);	- DA
+call afiseaza_carte(1239);	- NU
+
+10) Gasiti comanda de valoare cea mai mare folosind cursori. Folositi o bucla while.
+
+drop procedure if exists comanda_max;
+DELIMITER //
+create procedure comanda_max(out valoare_finala double)
+begin
+	declare valoare_curenta double;
+	declare valoare_max double default 0.0;
+	
+	declare nr_linii int;
+	declare k int;
+
+	declare c cursor for select valoare from comenzi;
+
+	select count(*) into nr_linii from l7.comenzi;
+	set k=1;
+
+	open c;
+
+	while(k<=nr_linii) do
+		fetch c into valoare_curenta;
+
+		if valoare_curenta>valoare_max then
+			set valoare_max=valoare_curenta;
+		end if;		
+
+		set k=k+1;
+	end while;
+
+	close c;
+
+	select valoare_max;
+	set valoare_finala=valoare_max;
+end
+//
+DELIMITER ;
+
+call comanda_max(@max_value);
+
+11) Refaceti 10) folosind o bucla loop.
+
+drop procedure if exists comanda_max_loop;
+DELIMITER //
+create procedure comanda_max_loop(out valoare_finala double)
+begin
+	declare valoare_curenta double;
+	declare valoare_max double default 0.0;
+	
+	declare nr_linii int;
+	declare k int;
+
+	declare c cursor for select valoare from comenzi;
+
+	select count(*) into nr_linii from lib7.comenzi;
+	set k=1;
+
+	open c;
+
+	iter:loop
+		fetch c into valoare_curenta;
+
+		if valoare_curenta>valoare_max then
+			set valoare_max=valoare_curenta;
+		end if;		
+
+		set k=k+1;
+
+		if(k>nr_linii) then
+			leave iter;
+		end if;
+	end loop;
+
+	close c;
+
+	select valoare_max;
+	set valoare_finala=valoare_max;
+end
+//
+DELIMITER ;
+
+call comanda_max(@max_value);
